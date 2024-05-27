@@ -1,2 +1,4 @@
 # prairieKing
-This is the repo for my version of 'Journey of the Prairie King' from ConcernedApe's 'Stardew Valley'. This was my final project for the Web Systems Programming course, CSE264, at Lehigh University.
+This is my final project for the Web Systems Programming course (CSE264) at Lehigh University. It is a recreation of the first five levels of Journey of the Prairie King from ConcernedApe's game Stardew Valley, written in JavaScript using HTML canvas graphics. The player must avoid enemies for a certain amount of time to progress to the next level, and a final boss - the outlaw - must be defeated to win. I'm proud to say that I received an 100% on this project, and the TA who graded it commented that it was "Literally Amazing."
+
+The enemies and projectiles are JavaScript classes. Event handlers track when keys are pressed, a draw function draws each image to the canvas, and an update function controls how the player and enemies move. I used promises to ensure that images display only when all of them are loaded.
