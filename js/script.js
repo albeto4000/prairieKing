@@ -539,7 +539,6 @@ function reset(){
 		pY = square * 3
 	}
 	
-
 	enemyTimer = timer + 150;
 }
 
