@@ -669,7 +669,7 @@ function update(){
 		enemyTimer = 150;
 
 		music.pause();
-		music = new Audio("audio/75. Journey Of The Prairie King (The Outlaw).mp3");
+		music = new Audio("audio/74. Journey Of The Prairie King (Overworld).mp3");
 		music.loop = true;
 		music.play();
 	}
