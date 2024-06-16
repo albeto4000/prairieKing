@@ -1,3 +1,53 @@
+class Powerup{
+	//Tracks each instance of the Powerup Class
+	static puList = [];
+	static types = ["oneUp", "wagonWheel", "machineGun", "shotgun", "nuke", "coffee", "badge"];
+
+	constructor(time, active){
+		this.x = Math.random() * (square * 14) + (xBound);
+		this.y = Math.random() * (square * 14) + (square);
+		this.time = time + 500;
+		this.active = active;
+
+		//Ensures powerups don't spawn on walls
+		while(obstacles.includes(getGrid(this.x, this.y)) || 
+		(pX - square < this.x && pX + (square) > this.x && 
+		this - square < this.y && pY + (square) > this.y)){
+			this.x = Math.random() * (square * 14) + (xBound * 2);
+			this.y = Math.random() * (square * 14) + (square * 2);
+		}
+
+		this.type = Powerup.types[Math.floor(Math.random() * Powerup.types.length)];
+
+		Powerup.puList.push(this);
+	}
+
+	draw(){
+		//Powerups fade if not picked up in time
+		if(timer >= this.time){
+			console.log()
+			this.remove();
+		}
+
+		if(!this.active){
+			ctx.drawImage(eval(this.type), this.x, this.y, square, square);
+		}
+	}
+
+	//Removes this from the powerup list
+	remove(){
+		let index = Powerup.puList.indexOf(this)
+		if(index !== -1) {
+			delete Powerup.puList[index];
+		}
+	}
+
+	//Returns the bulletList
+	static getPuList(){
+		return Powerup.puList;
+	}
+}
+
 //Class for user-created and boss-created projectiles
 class Bullet{
 	//Tracks each instance of the bullet class
@@ -11,9 +61,13 @@ class Bullet{
 		//The player should only be hurt by bullets they didn't create
 		this.player = player;
 
+		//Scales all bullets to travel at the same speed
+		let magnitude = ((dX ** 2) + (dY ** 2)) ** (1/2);
+		let scale = 5 / magnitude;
+
 		//Tracks bullet velocity
-		this.dX = dX;
-		this.dY = dY;
+		this.dX = dX * scale;
+		this.dY = dY * scale;
 
 		//Tracks bullets current location
 		this.x = pX + (square/2) - (this.width/2);
@@ -296,6 +350,7 @@ let bulletImg = -1;
 let orc = -1;
 
 let lifeImg = -1;
+
 let timeImg = -1;
 let titleImg = -1;
 
@@ -305,6 +360,14 @@ let boss = -1;
 
 let end = -1;
 let wave = -1;
+
+let oneUp = -1;
+let wagonWheel = -1;
+let machineGun = -1;
+let shotgun = -1;
+let nuke = -1;
+let coffee = -1;
+let badge = -1;
 
 $(document).ready(async function(){
 	//Loads images on page load
@@ -316,6 +379,7 @@ $(document).ready(async function(){
 		"lives", "time", "title", "bossMsg",
 		"boss0", "boss1", "boss2", "boss3", 
 		"end", "wave",
+		"wagon_wheel", "machineGun", "shotgun", "nuke", "coffee", "badge",
 		"desert0", "desert1", "desert2", "desert3", "desert4", "cactus0", "cactus1", "barrel", "canyon0", "canyon1"
 	]);
 
@@ -348,6 +412,15 @@ $(document).ready(async function(){
 	//Sets end-screen images
 	end = images[21];
 	wave = images[22];
+
+	//Sets the powerup images
+	oneUp = lifeImg;
+	wagonWheel = images[23];
+	machineGun = images[24];
+	shotgun = images[25];
+	nuke = images[26];
+	coffee = images[27];
+	badge = images[28];
 	
 	//Sets terrain images
 	terrain = images.slice(images.length-10, images.length);
@@ -500,8 +573,7 @@ let levels = [
 //Location
 let pX = (canvas.width - square) / 2;
 let pY = yBound / 2;
-//Speed
-let pSpeed = 2;
+
 //Player lives
 let lives = 3;
 
@@ -513,6 +585,9 @@ let obstacles = [5, 6, 7, 8, 9];
 
 //Cooldown before more enemies appear
 let enemyTimer = 150;
+
+//Cooldown before powerups appear
+let puTimer = Math.floor(Math.random() * 200) + 300;
 
 //Adjusts how much time until level completion (higher weight = less time)
 let levelTime = 0.12;
@@ -530,6 +605,7 @@ let bossSpeed = 1.5;
 function reset(){
 	Orc.orcList = [];
 	Bullet.bulletList = [];
+	Powerup.puList = [];
 	if(level != 4){
 		pX = xBound + (square * 8);
 		pY = yBound / 2;
@@ -540,6 +616,7 @@ function reset(){
 	}
 	
 	enemyTimer = timer + 150;
+	puTimer = timer + (Math.floor(Math.random() * 200) + 300);
 }
 
 //Gets the grid location of the entity for collision-tracking
@@ -609,6 +686,11 @@ function draw() {
 			bullet.draw();
 		});
 
+		//Draw powerups
+		Powerup.getPuList().forEach(pu => {
+			pu.draw();
+		});
+
 		//Draw Level Time
 		if(timer * levelTime < square * 15 && level != 4){
 			ctx.beginPath();
@@ -666,10 +748,9 @@ function update(){
 	//Starts the game when the player presses space
 	if(timer < 0 && space){
 		timer = 0;
-		enemyTimer = 150;
-
+		
 		music.pause();
-		music = new Audio("audio/74. Journey Of The Prairie King (Overworld).mp3");
+		music = new Audio("audio/75. Journey Of The Prairie King (The Outlaw).mp3");
 		music.loop = true;
 		music.play();
 	}
@@ -680,7 +761,7 @@ function update(){
 		timer = -1;
 		lives = 3;
 	}
-	
+
 	//Game mechanics active if game has begun and boss not defeated
 	if(timer >= 0 && bossHP > 0){
 		//Sets the grid to the current level
@@ -718,6 +799,118 @@ function update(){
 				}
 		});
 
+		//Powerup Spawning
+		if(timer == puTimer && level < 4){
+			let pu = new Powerup(timer, false);
+			puTimer = (Math.floor(Math.random() * 200) + 300) + timer;
+		}
+
+		//Powerup Collisions
+		Powerup.getPuList().forEach(pu => {
+			if(
+					pX - square < pu.x && pX + (square) > pu.x && 
+					pY - square < pu.y && pY + (square) > pu.y
+				){
+					if(pu.type == "oneUp"){
+						//Adds a life, removes powerup
+						lives += 1;
+						pu.remove();
+					}
+					else if(pu.type == "nuke"){
+						//Clears all enemies
+						Orc.orcList = [];
+						pu.remove();
+					}
+					else{
+						pu.time = timer + 400;
+						pu.active = true;
+					}
+				}
+		});
+
+		//Player Speed
+		let pSpeed = 2;
+
+		//Shoot controls
+		let bX = 0;
+		let bY = 0;
+
+		let bSpeed = 5;
+		let bTime = 20;
+
+		let sg = false;
+		let ww = false;
+
+		Powerup.getPuList().forEach(pu => {
+			if(pu.active){
+				if(pu.type == "shotgun"){
+					sg = true;
+				}
+				if(pu.type == "machineGun"){
+					bTime = 7;
+				}
+				if(pu.type == "wagonWheel"){
+					ww = true;
+				}
+				if(pu.type == "badge"){
+					sg = true;
+					bTime = 7;
+					ww = true;
+				}
+				if(pu.type == "coffee"){
+					pSpeed = 3;
+				}
+			}
+		});
+
+		//Sets bullet velocity depending on which keys are pressed
+		if(upKey){
+			bY -= bSpeed;
+		}
+		if(leftKey){
+			bX -= bSpeed;
+		}
+		if(downKey){
+			bY += bSpeed;
+		}
+		if(rightKey){
+			bX += bSpeed;
+		}
+
+		//If bullet should move, a new bullet is created
+		if((bX != 0 || bY != 0) && timer % bTime == 0){
+			let bullet = new Bullet(pX, pY, bX, bY, true);
+
+			if(sg){
+				//Shotgun Extra Bullets
+				if(bX == 0){
+					bX += bSpeed / 2;
+					bullet = new Bullet(pX, pY, bX, bY, true);
+					bullet = new Bullet(pX, pY, -bX, bY, true);
+				}
+				else if(bY == 0){
+					bY += bSpeed / 2;
+					bullet = new Bullet(pX, pY, bX, bY, true);
+					bullet = new Bullet(pX, pY, bX, -bY, true);
+				}
+				else{
+					bullet = new Bullet(pX, pY, bX, bY / 2, true);
+					bullet = new Bullet(pX, pY, bX / 2, bY, true);
+				}
+			}
+			if(ww){
+				//Wagon Wheel Extra Bullets
+				bullet = new Bullet(pX, pY, bSpeed, 0); //Right
+				bullet = new Bullet(pX, pY, -bSpeed, 0); //Left
+				bullet = new Bullet(pX, pY, 0, -bSpeed); //Up
+				bullet = new Bullet(pX, pY, 0, bSpeed); //Down
+				bullet = new Bullet(pX, pY, -bSpeed, -bSpeed); //NW
+				bullet = new Bullet(pX, pY, bSpeed, -bSpeed); //NE
+				bullet = new Bullet(pX, pY, -bSpeed, bSpeed); //SW
+				bullet = new Bullet(pX, pY, bSpeed, bSpeed); //SE
+			}
+		}
+
 		//Move controls
 		//Down
 		if(sKey && pY < (yBound - square) && !obstacles.includes(getGrid(pX + (square/2), pY + square))){
@@ -753,31 +946,6 @@ function update(){
 			}
 		}
 
-		//Shoot controls
-		let bX = 0;
-		let bY = 0;
-
-		let bSpeed = 5;
-
-		//Sets bullet velocity depending on which keys are pressed
-		if(upKey){
-			bY -= bSpeed;
-		}
-		if(leftKey){
-			bX -= bSpeed;
-		}
-		if(downKey){
-			bY += bSpeed;
-		}
-		if(rightKey){
-			bX += bSpeed;
-		}
-
-		//If bullet should move, a new bullet is created
-		if((bX != 0 || bY != 0) && timer % 20 == 0){
-			let bullet = new Bullet(pX, pY, bX, bY, true);
-		}
-
 		//Enemy spawning
 		if(timer == enemyTimer && level < 4 && timer * levelTime < square * 15){
 			let start = Math.floor(Math.random()*4);
@@ -786,7 +954,7 @@ function update(){
 			}
 			
 			//Sets the new time an enemy will appear
-			enemyTimer = (Math.floor(Math.random() * (100 - (10 * level)))+ 40) + timer;
+			enemyTimer = (Math.floor(Math.random() * (100 - (5 * level)))) + timer + 50;
 		}
 		
 		//Next level transition
@@ -797,6 +965,9 @@ function update(){
 
 			//Clears all enemies
 			Orc.orcList = [];
+
+			//Clears all powerups
+			Powerup.puList = [];
 			
 			//Sets player to move to the opening at the bottom of the screen
 			dKey = (pX < xBound + (square * 8));
@@ -805,7 +976,6 @@ function update(){
 			wKey = false;
 			//Player moves until they have reached the bottom of the grid
 			sKey = ((!transition && pY < yBound) || (transition && pY < yBound / 2));
-
 
 			upKey = false;
 			leftKey = false;
@@ -816,7 +986,7 @@ function update(){
 			obstacles = [];
 
 			//When the player reaches the bottom, increases the level and moves the player to the top
-			if(!transition && pY == yBound - square){
+			if(!transition && pY >= yBound - (square * 1.2)){
 				level += 1;
 				pY = square;
 
@@ -862,7 +1032,7 @@ function update(){
 				//Resets timer and enemy timer
 				timer = 0;
 				enemyTimer = 200;
-
+				
 				document.addEventListener("keydown", keyDownHandler);
 				document.addEventListener("keyup", keyUpHandler);
 			}
@@ -893,7 +1063,7 @@ function update(){
 				//Sets new boss behavior on next enemyTimer
 				if(timer == enemyTimer){
 					bossAction = Math.floor(Math.random() * 4);
-					enemyTimer = (Math.floor(Math.random() * (100 - (10 * level)))+ 40) + timer;
+					enemyTimer = (Math.floor(Math.random() * (100 - (10 * level)))) + timer + 50;
 					
 				}
 				//If action is 1 or 3, move to player location and shoot
@@ -933,6 +1103,7 @@ function update(){
 
 		//Increments timer
 		timer += 1;
+		console.log(timer, puTimer);
 	}
 	
 	//If boss defeated, stop looping music
