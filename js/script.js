@@ -25,7 +25,6 @@ class Powerup{
 	draw(){
 		//Powerups fade if not picked up in time
 		if(timer >= this.time){
-			console.log()
 			this.remove();
 		}
 
@@ -601,6 +600,10 @@ let bossX = xBound + (square * 8);
 let bossY = yBound - (square * 3);
 let bossSpeed = 1.5;
 
+//Caps FPS to 120
+let fpsTimer = 0;
+let fps = 120;
+
 //Resets on game start/when player loses a life
 function reset(){
 	Orc.orcList = [];
@@ -745,374 +748,377 @@ function draw() {
 
 //Controls game mechanics
 function update(){
-	//Starts the game when the player presses space
-	if(timer < 0 && space){
-		timer = 0;
-		
-		music.pause();
-		music = new Audio("audio/74. Journey Of The Prairie King (Overworld).mp3");
-		music.loop = true;
-		music.play();
-	}
-
-	//Resets the game if the player loses all lives
-	if(lives < 0){
-		level = 0;
-		timer = -1;
-		lives = 3;
-	}
-
-	//Game mechanics active if game has begun and boss not defeated
-	if(timer >= 0 && bossHP > 0){
-		//Sets the grid to the current level
-		grid = levels[level];
-
-		//Animates cacti every 60 iterations of the update function
-		//The animation occurs by swapping the images
-		if(timer % 60 == 0){
-			if(cactus == 5){
-				let temp = terrain[5];
-				terrain[5] = terrain[6];
-				terrain[6] = temp;
-
-				cactus = 6;
-			}
-			else{
-				let temp = terrain[5];
-				terrain[5] = terrain[6];
-				terrain[6] = temp;
-
-				cactus = 5;
-			}
+	//Caps the framerate to 120fps
+	if(Date.now() - fpsTimer > 1000 / fps){
+		//Starts the game when the player presses space
+		if(timer < 0 && space){
+			timer = 0;
+			
+			music.pause();
+			music = new Audio("audio/74. Journey Of The Prairie King (Overworld).mp3");
+			music.loop = true;
+			music.play();
 		}
 
-		//Tracks if orc collides with player
-		Orc.getOrcList().forEach(orc => {
-			if(
-					pX - square < orc.x && pX + (square) > orc.x && 
-					pY - square < orc.y && pY + (square) > orc.y
-				){
-					//Removes a life, decrements timer to prevent another enemy from instantly spawning
-					lives -= 1;
-					timer -= 150;
-					reset();
-				}
-		});
-
-		//Powerup Spawning
-		if(timer == puTimer && level < 4){
-			let pu = new Powerup(timer, false);
-			puTimer = (Math.floor(Math.random() * 200) + 300) + timer;
+		//Resets the game if the player loses all lives
+		if(lives < 0){
+			level = 0;
+			timer = -1;
+			lives = 3;
 		}
 
-		//Powerup Collisions
-		Powerup.getPuList().forEach(pu => {
-			if(
-					pX - square < pu.x && pX + (square) > pu.x && 
-					pY - square < pu.y && pY + (square) > pu.y
-				){
-					if(pu.type == "oneUp"){
-						//Adds a life, removes powerup
-						lives += 1;
-						pu.remove();
-					}
-					else if(pu.type == "nuke"){
-						//Clears all enemies
-						Orc.orcList = [];
-						pu.remove();
-					}
-					else{
-						pu.time = timer + 400;
-						pu.active = true;
-					}
-				}
-		});
+		//Game mechanics active if game has begun and boss not defeated
+		if(timer >= 0 && bossHP > 0){
+			//Sets the grid to the current level
+			grid = levels[level];
 
-		//Player Speed
-		let pSpeed = 2;
+			//Animates cacti every 60 iterations of the update function
+			//The animation occurs by swapping the images
+			if(timer % 60 == 0){
+				if(cactus == 5){
+					let temp = terrain[5];
+					terrain[5] = terrain[6];
+					terrain[6] = temp;
 
-		//Shoot controls
-		let bX = 0;
-		let bY = 0;
-
-		let bSpeed = 5;
-		let bTime = 20;
-
-		let sg = false;
-		let ww = false;
-
-		Powerup.getPuList().forEach(pu => {
-			if(pu.active){
-				if(pu.type == "shotgun"){
-					sg = true;
-				}
-				if(pu.type == "machineGun"){
-					bTime = 7;
-				}
-				if(pu.type == "wagonWheel"){
-					ww = true;
-				}
-				if(pu.type == "badge"){
-					sg = true;
-					bTime = 7;
-					ww = true;
-				}
-				if(pu.type == "coffee"){
-					pSpeed = 3;
-				}
-			}
-		});
-
-		//Sets bullet velocity depending on which keys are pressed
-		if(upKey){
-			bY -= bSpeed;
-		}
-		if(leftKey){
-			bX -= bSpeed;
-		}
-		if(downKey){
-			bY += bSpeed;
-		}
-		if(rightKey){
-			bX += bSpeed;
-		}
-
-		//If bullet should move, a new bullet is created
-		if((bX != 0 || bY != 0) && timer % bTime == 0){
-			let bullet = new Bullet(pX, pY, bX, bY, true);
-
-			if(sg){
-				//Shotgun Extra Bullets
-				if(bX == 0){
-					bX += bSpeed / 2;
-					bullet = new Bullet(pX, pY, bX, bY, true);
-					bullet = new Bullet(pX, pY, -bX, bY, true);
-				}
-				else if(bY == 0){
-					bY += bSpeed / 2;
-					bullet = new Bullet(pX, pY, bX, bY, true);
-					bullet = new Bullet(pX, pY, bX, -bY, true);
+					cactus = 6;
 				}
 				else{
-					bullet = new Bullet(pX, pY, bX, bY / 2, true);
-					bullet = new Bullet(pX, pY, bX / 2, bY, true);
+					let temp = terrain[5];
+					terrain[5] = terrain[6];
+					terrain[6] = temp;
+
+					cactus = 5;
 				}
 			}
-			if(ww){
-				//Wagon Wheel Extra Bullets
-				bullet = new Bullet(pX, pY, bSpeed, 0); //Right
-				bullet = new Bullet(pX, pY, -bSpeed, 0); //Left
-				bullet = new Bullet(pX, pY, 0, -bSpeed); //Up
-				bullet = new Bullet(pX, pY, 0, bSpeed); //Down
-				bullet = new Bullet(pX, pY, -bSpeed, -bSpeed); //NW
-				bullet = new Bullet(pX, pY, bSpeed, -bSpeed); //NE
-				bullet = new Bullet(pX, pY, -bSpeed, bSpeed); //SW
-				bullet = new Bullet(pX, pY, bSpeed, bSpeed); //SE
-			}
-		}
 
-		//Move controls
-		//Down
-		if(sKey && pY < (yBound - square) && !obstacles.includes(getGrid(pX + (square/2), pY + square))){
-			pImg = player[0];
-			pY += pSpeed;
-		}
-		//Up
-		if(wKey && pY > square && !obstacles.includes(getGrid(pX + (square/2), pY))){
-			pImg = player[2];
-			pY -= pSpeed;
-		}
-		//Left
-		if(aKey && pX > xBound && !obstacles.includes(getGrid(pX, pY + (square/2)))){
-			pImg = player[1];
-			pX -= pSpeed;
-		}
-		//Right
-		if(dKey && pX < canvas.width - square - xBound && !obstacles.includes(getGrid(pX+square, pY+(square/2)))){
-			pImg = player[3];
-			pX += pSpeed;
-		}
-		//Stationary
-		if(!sKey && !wKey && !aKey && !dKey){
-			pImg = player[4];
-		}
-		//Player boots moving
-		else{
-			if(timer % 10 == 0){
-				bImg += 1;
-				if(bImg >= 4){
-					bImg = 0;
-				}
-			}
-		}
-
-		//Enemy spawning
-		if(timer == enemyTimer && level < 4 && timer * levelTime < square * 15){
-			let start = Math.floor(Math.random()*4);
-			for(let pos = 0; pos < Math.floor(Math.random()*3)+1; pos++){
-				let orc = new Orc(start, pos);
-			}
-			
-			//Sets the new time an enemy will appear
-			enemyTimer = (Math.floor(Math.random() * (100 - (5 * level)))) + timer + 50;
-		}
-		
-		//Next level transition
-		if(timer * levelTime >= square * 15 && level < 4){
-			//Temporarily removes player controls
-			document.removeEventListener("keydown", keyDownHandler);
-			document.removeEventListener("keyup", keyUpHandler);
-
-			//Clears all enemies
-			Orc.orcList = [];
-
-			//Clears all powerups
-			Powerup.puList = [];
-			
-			//Sets player to move to the opening at the bottom of the screen
-			dKey = (pX < xBound + (square * 8));
-			aKey = (pX > xBound + (square * 8));
-			//Player cannot move upward
-			wKey = false;
-			//Player moves until they have reached the bottom of the grid
-			sKey = ((!transition && pY < yBound) || (transition && pY < yBound / 2));
-
-			upKey = false;
-			leftKey = false;
-			downKey = false;
-			rightKey = false;
-
-			//Removes all obstacles so the player can exit the current grid
-			obstacles = [];
-
-			//When the player reaches the bottom, increases the level and moves the player to the top
-			if(!transition && pY >= yBound - (square * 1.2)){
-				level += 1;
-				pY = square;
-
-				//When player has moved to the bottom, player has transitioned to the next level
-				transition = true;
-			}
-			//Player has moved to the next level
-			if(transition && pY == yBound / 2){	
-				transition = false;
-
-				dKey = false;
-				aKey = false;
-				sKey = false;
-
-				//Resets obstacles
-				obstacles = [5, 6, 7, 8, 9];
-
-				//Resets timer and player location
-				timer = 0;
-				reset();
-				
-				//Adds key handlers back in, player now has control
-				document.addEventListener("keydown", keyDownHandler);
-				document.addEventListener("keyup", keyUpHandler);
-			}			
-		}
-		//Final Boss Logic
-		if(level == 4){
-			if(transition && pY == square * 7.5){
-				//Sets new final boss music
-				music.pause();
-				music = new Audio("audio/75. Journey Of The Prairie King (The Outlaw).mp3");
-				music.loop = true;
-				music.play();
-
-				//Player has transitioned to the next level
-				sKey = false;
-				dKey = false;
-				aKey = false;
-				transition = false;
-				obstacles = [5, 6, 7, 8, 9];
-
-				//Resets timer and enemy timer
-				timer = 0;
-				enemyTimer = 200;
-				
-				document.addEventListener("keydown", keyDownHandler);
-				document.addEventListener("keyup", keyUpHandler);
-			}
-			//Final boss attacks
-			if(timer >= 200 && bossHP > 0){
-				//Bullet collisions
-				Bullet.getBulletList().forEach(bullet => {
-					//Boss bullets hitting player
-					if(
-						pX - square < bullet.x && pX + (square) > bullet.x && 
-						pY - square < bullet.y && pY + (square) > bullet.y &&
-						!bullet.player
+			//Tracks if orc collides with player
+			Orc.getOrcList().forEach(orc => {
+				if(
+						pX - square < orc.x && pX + (square) > orc.x && 
+						pY - square < orc.y && pY + (square) > orc.y
 					){
+						//Removes a life, decrements timer to prevent another enemy from instantly spawning
 						lives -= 1;
 						timer -= 150;
 						reset();
 					}
-					//Player bullets hitting boss
-					if(
-						bossX - square + 15 < bullet.x && bossX + (square) - 5 > bullet.x && 
-						bossY - square < bullet.y && bossY + (square) > bullet.y &&
-						bullet.player
+			});
+
+			//Powerup Spawning
+			if(timer == puTimer && level < 4){
+				let pu = new Powerup(timer, false);
+				puTimer = (Math.floor(Math.random() * 200) + 300) + timer;
+			}
+
+			//Powerup Collisions
+			Powerup.getPuList().forEach(pu => {
+				if(
+						pX - square < pu.x && pX + (square) > pu.x && 
+						pY - square < pu.y && pY + (square) > pu.y
 					){
-						bossHP -= 1;
-						bullet.remove();
+						if(pu.type == "oneUp"){
+							//Adds a life, removes powerup
+							lives += 1;
+							pu.remove();
+						}
+						else if(pu.type == "nuke"){
+							//Clears all enemies
+							Orc.orcList = [];
+							pu.remove();
+						}
+						else{
+							pu.time = timer + 400;
+							pu.active = true;
+						}
 					}
-				});
-				//Sets new boss behavior on next enemyTimer
-				if(timer == enemyTimer){
-					bossAction = Math.floor(Math.random() * 4);
-					enemyTimer = (Math.floor(Math.random() * (100 - (10 * level)))) + timer + 50;
+			});
+
+			//Player Speed
+			let pSpeed = 2;
+
+			//Shoot controls
+			let bX = 0;
+			let bY = 0;
+
+			let bSpeed = 5;
+			let bTime = 20;
+
+			let sg = false;
+			let ww = false;
+
+			Powerup.getPuList().forEach(pu => {
+				if(pu.active){
+					if(pu.type == "shotgun"){
+						sg = true;
+					}
+					if(pu.type == "machineGun"){
+						bTime = 7;
+					}
+					if(pu.type == "wagonWheel"){
+						ww = true;
+					}
+					if(pu.type == "badge"){
+						sg = true;
+						bTime = 7;
+						ww = true;
+					}
+					if(pu.type == "coffee"){
+						pSpeed = 3;
+					}
+				}
+			});
+
+			//Sets bullet velocity depending on which keys are pressed
+			if(upKey){
+				bY -= bSpeed;
+			}
+			if(leftKey){
+				bX -= bSpeed;
+			}
+			if(downKey){
+				bY += bSpeed;
+			}
+			if(rightKey){
+				bX += bSpeed;
+			}
+
+			//If bullet should move, a new bullet is created
+			if((bX != 0 || bY != 0) && timer % bTime == 0){
+				let bullet = new Bullet(pX, pY, bX, bY, true);
+
+				if(sg){
+					//Shotgun Extra Bullets
+					if(bX == 0){
+						bX += bSpeed / 2;
+						bullet = new Bullet(pX, pY, bX, bY, true);
+						bullet = new Bullet(pX, pY, -bX, bY, true);
+					}
+					else if(bY == 0){
+						bY += bSpeed / 2;
+						bullet = new Bullet(pX, pY, bX, bY, true);
+						bullet = new Bullet(pX, pY, bX, -bY, true);
+					}
+					else{
+						bullet = new Bullet(pX, pY, bX, bY / 2, true);
+						bullet = new Bullet(pX, pY, bX / 2, bY, true);
+					}
+				}
+				if(ww){
+					//Wagon Wheel Extra Bullets
+					bullet = new Bullet(pX, pY, bSpeed, 0); //Right
+					bullet = new Bullet(pX, pY, -bSpeed, 0); //Left
+					bullet = new Bullet(pX, pY, 0, -bSpeed); //Up
+					bullet = new Bullet(pX, pY, 0, bSpeed); //Down
+					bullet = new Bullet(pX, pY, -bSpeed, -bSpeed); //NW
+					bullet = new Bullet(pX, pY, bSpeed, -bSpeed); //NE
+					bullet = new Bullet(pX, pY, -bSpeed, bSpeed); //SW
+					bullet = new Bullet(pX, pY, bSpeed, bSpeed); //SE
+				}
+			}
+
+			//Move controls
+			//Down
+			if(sKey && pY < (yBound - square) && !obstacles.includes(getGrid(pX + (square/2), pY + square))){
+				pImg = player[0];
+				pY += pSpeed;
+			}
+			//Up
+			if(wKey && pY > square && !obstacles.includes(getGrid(pX + (square/2), pY))){
+				pImg = player[2];
+				pY -= pSpeed;
+			}
+			//Left
+			if(aKey && pX > xBound && !obstacles.includes(getGrid(pX, pY + (square/2)))){
+				pImg = player[1];
+				pX -= pSpeed;
+			}
+			//Right
+			if(dKey && pX < canvas.width - square - xBound && !obstacles.includes(getGrid(pX+square, pY+(square/2)))){
+				pImg = player[3];
+				pX += pSpeed;
+			}
+			//Stationary
+			if(!sKey && !wKey && !aKey && !dKey){
+				pImg = player[4];
+			}
+			//Player boots moving
+			else{
+				if(timer % 10 == 0){
+					bImg += 1;
+					if(bImg >= 4){
+						bImg = 0;
+					}
+				}
+			}
+
+			//Enemy spawning
+			if(timer == enemyTimer && level < 4 && timer * levelTime < square * 15){
+				let start = Math.floor(Math.random()*4);
+				for(let pos = 0; pos < Math.floor(Math.random()*3)+1; pos++){
+					let orc = new Orc(start, pos);
+				}
+				
+				//Sets the new time an enemy will appear
+				enemyTimer = (Math.floor(Math.random() * (100 - (5 * level)))) + timer + 50;
+			}
+			
+			//Next level transition
+			if(timer * levelTime >= square * 15 && level < 4){
+				//Temporarily removes player controls
+				document.removeEventListener("keydown", keyDownHandler);
+				document.removeEventListener("keyup", keyUpHandler);
+
+				//Clears all enemies
+				Orc.orcList = [];
+
+				//Clears all powerups
+				Powerup.puList = [];
+				
+				//Sets player to move to the opening at the bottom of the screen
+				dKey = (pX < xBound + (square * 8));
+				aKey = (pX > xBound + (square * 8));
+				//Player cannot move upward
+				wKey = false;
+				//Player moves until they have reached the bottom of the grid
+				sKey = ((!transition && pY < yBound) || (transition && pY < yBound / 2));
+
+				upKey = false;
+				leftKey = false;
+				downKey = false;
+				rightKey = false;
+
+				//Removes all obstacles so the player can exit the current grid
+				obstacles = [];
+
+				//When the player reaches the bottom, increases the level and moves the player to the top
+				if(!transition && pY >= yBound - (square * 1.2)){
+					level += 1;
+					pY = square;
+
+					//When player has moved to the bottom, player has transitioned to the next level
+					transition = true;
+				}
+				//Player has moved to the next level
+				if(transition && pY == yBound / 2){	
+					transition = false;
+
+					dKey = false;
+					aKey = false;
+					sKey = false;
+
+					//Resets obstacles
+					obstacles = [5, 6, 7, 8, 9];
+
+					//Resets timer and player location
+					timer = 0;
+					reset();
 					
+					//Adds key handlers back in, player now has control
+					document.addEventListener("keydown", keyDownHandler);
+					document.addEventListener("keyup", keyUpHandler);
+				}			
+			}
+			//Final Boss Logic
+			if(level == 4){
+				if(transition && pY == square * 7.5){
+					//Sets new final boss music
+					music.pause();
+					music = new Audio("audio/75. Journey Of The Prairie King (The Outlaw).mp3");
+					music.loop = true;
+					music.play();
+
+					//Player has transitioned to the next level
+					sKey = false;
+					dKey = false;
+					aKey = false;
+					transition = false;
+					obstacles = [5, 6, 7, 8, 9];
+
+					//Resets timer and enemy timer
+					timer = 0;
+					enemyTimer = 200;
+					
+					document.addEventListener("keydown", keyDownHandler);
+					document.addEventListener("keyup", keyUpHandler);
 				}
-				//If action is 1 or 3, move to player location and shoot
-				if(bossAction % 2 != 0){
-					if(bossX > pX - 5){
-						bossX -= bossSpeed;
-						animateBoss();
+				//Final boss attacks
+				if(timer >= 200 && bossHP > 0){
+					//Bullet collisions
+					Bullet.getBulletList().forEach(bullet => {
+						//Boss bullets hitting player
+						if(
+							pX - square < bullet.x && pX + (square) > bullet.x && 
+							pY - square < bullet.y && pY + (square) > bullet.y &&
+							!bullet.player
+						){
+							lives -= 1;
+							timer -= 150;
+							reset();
+						}
+						//Player bullets hitting boss
+						if(
+							bossX - square + 15 < bullet.x && bossX + (square) - 5 > bullet.x && 
+							bossY - square < bullet.y && bossY + (square) > bullet.y &&
+							bullet.player
+						){
+							bossHP -= 1;
+							bullet.remove();
+						}
+					});
+					//Sets new boss behavior on next enemyTimer
+					if(timer == enemyTimer){
+						bossAction = Math.floor(Math.random() * 4);
+						enemyTimer = (Math.floor(Math.random() * (100 - (10 * level)))) + timer + 50;
+						
 					}
-					else if(bossX < pX + square + 5){
-						bossX += bossSpeed;
-						animateBoss();
+					//If action is 1 or 3, move to player location and shoot
+					if(bossAction % 2 != 0){
+						if(bossX > pX - 5){
+							bossX -= bossSpeed;
+							animateBoss();
+						}
+						else if(bossX < pX + square + 5){
+							bossX += bossSpeed;
+							animateBoss();
+						}
+						if(timer % 20 == 0){
+							let bullet = new Bullet(bossX, bossY, 0, -5, false);
+						}
 					}
-					if(timer % 20 == 0){
-						let bullet = new Bullet(bossX, bossY, 0, -5, false);
+					//If action is 2, hide behind wall
+					else if(bossAction == 2){
+						if(bossX > xBound + (square * 7)){
+							bossX -= bossSpeed;
+							animateBoss();
+						}
+						else if(bossX < xBound + (square * 9)){
+							bossX += bossSpeed;
+							animateBoss();
+						}
+						else{
+							bossImg = 0;
+						}
 					}
-				}
-				//If action is 2, hide behind wall
-				else if(bossAction == 2){
-					if(bossX > xBound + (square * 7)){
-						bossX -= bossSpeed;
-						animateBoss();
-					}
-					else if(bossX < xBound + (square * 9)){
-						bossX += bossSpeed;
-						animateBoss();
-					}
+					//Otherwise, stay where boss is
 					else{
 						bossImg = 0;
 					}
 				}
-				//Otherwise, stay where boss is
-				else{
-					bossImg = 0;
-				}
 			}
+
+			//Increments timer
+			timer += 1;
+		}
+		
+		//If boss defeated, stop looping music
+		if(bossHP <= 0){
+			music.loop = false;
 		}
 
-		//Increments timer
-		timer += 1;
-		console.log(timer, puTimer);
+		draw();
+		fpsTimer = Date.now();
 	}
 	
-	//If boss defeated, stop looping music
-	if(bossHP <= 0){
-		music.loop = false;
-	}
-
-	//Draw the game
-	draw();
 	//Animate the update function
 	requestAnimationFrame(update);
 }
