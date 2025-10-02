@@ -457,7 +457,7 @@ let space = false;
 //Initializes timer at -1 (game hasn't started)
 let timer = -1;
 //Initializes level at 0
-let level = 0;
+let level = 3;
 
 //Player is not moving from one level to another
 let transition = false;
@@ -834,7 +834,7 @@ function update(){
 			});
 
 			//Player Speed
-			let pSpeed = 2;
+			let pSpeed = 1.5;
 
 			//Shoot controls
 			let bX = 0;
@@ -1020,7 +1020,7 @@ function update(){
 			}
 			//Final Boss Logic
 			if(level == 4){
-				if(transition && pY == square * 7.5){
+				if(transition && pY >= square * 7.5){
 					//Sets new final boss music
 					music.pause();
 					music = new Audio("audio/75. Journey Of The Prairie King (The Outlaw).mp3");

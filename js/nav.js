@@ -1,4 +1,4 @@
-navbar = `<nav class="navbar navbar-dark bg-dark pt-3 pb-2 px-3 justify-content">
+navbar = `<nav id="site-nav" class="navbar navbar-dark bg-dark pt-3 pb-3 px-3 justify-content">
     <a class="navbar-brand text-success" href="https://albeto4000.github.io/">MATTHEW DOLIN</a>
     <div>
         <div class="navbar-text text-capitalize">
@@ -38,5 +38,8 @@ about_modal = `<div class="modal fade" id="aboutModal" tabindex="-1" role="dialo
 			</div>
 		</div>`
 
+
+
 document.write(navbar);
 document.write(about_modal);
+document.write(nav_style);
