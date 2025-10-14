@@ -457,7 +457,7 @@ let space = false;
 //Initializes timer at -1 (game hasn't started)
 let timer = -1;
 //Initializes level at 0
-let level = 3;
+let level = 0;
 
 //Player is not moving from one level to another
 let transition = false;
