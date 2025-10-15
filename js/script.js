@@ -466,6 +466,9 @@ let transition = false;
 let music = new Audio("audio/74. Journey Of The Prairie King (Overworld).mp3");
 music.loop = true;
 
+let footstep = new Audio("audio/Cowboy_Footstep.mp3");
+let gunshot = new Audio("audio/Cowboy_gunshot.mp3");
+
 //Cactus variable exists to animate the cacti
 //The value changes between 5 and 6 to use different images
 let cactus = 5;
@@ -765,6 +768,11 @@ function update(){
 			level = 0;
 			timer = -1;
 			lives = 3;
+
+			music.pause();
+			music = new Audio("audio/74. Journey Of The Prairie King (Overworld).mp3");
+			music.loop = true;
+			music.play();
 		}
 
 		//Game mechanics active if game has begun and boss not defeated
@@ -885,6 +893,7 @@ function update(){
 			//If bullet should move, a new bullet is created
 			if((bX != 0 || bY != 0) && timer % bTime == 0){
 				let bullet = new Bullet(pX, pY, bX, bY, true);
+				gunshot.play();
 
 				if(sg){
 					//Shotgun Extra Bullets
@@ -921,21 +930,25 @@ function update(){
 			if(sKey && pY < (yBound - square) && !obstacles.includes(getGrid(pX + (square/2), pY + square))){
 				pImg = player[0];
 				pY += pSpeed;
+				footstep.play();
 			}
 			//Up
 			if(wKey && pY > square && !obstacles.includes(getGrid(pX + (square/2), pY))){
 				pImg = player[2];
 				pY -= pSpeed;
+				footstep.play();
 			}
 			//Left
 			if(aKey && pX > xBound && !obstacles.includes(getGrid(pX, pY + (square/2)))){
 				pImg = player[1];
 				pX -= pSpeed;
+				footstep.play();
 			}
 			//Right
 			if(dKey && pX < canvas.width - square - xBound && !obstacles.includes(getGrid(pX+square, pY+(square/2)))){
 				pImg = player[3];
 				pX += pSpeed;
+				footstep.play();
 			}
 			//Stationary
 			if(!sKey && !wKey && !aKey && !dKey){

@@ -42,4 +42,3 @@ about_modal = `<div class="modal fade" id="aboutModal" tabindex="-1" role="dialo
 
 document.write(navbar);
 document.write(about_modal);
-document.write(nav_style);
